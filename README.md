@@ -1,3 +1,5 @@
+> **Note:** This installer is still under testing. Do not rely on it fully before validating it in your own environment.
+
 # Frappe v16 Automated Installer (Ubuntu 24.04)
 
 One-shot production-oriented installer for:
@@ -99,4 +101,4 @@ Rotate credentials after install:
 
 MIT (or your preferred license).
 
-> **Note:** This installer is still under testing. Do not rely on it fully before validating it in your own environment.
+
