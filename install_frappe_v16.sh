@@ -15,14 +15,14 @@ TZ_NAME="Asia/Kathmandu"
 DB_ROOT_PASSWORD="${DB_ROOT_PASSWORD:-}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-}"
 SWAP_GB="${SWAP_GB:-8}"
+ASSUME_YES=0
 
 usage() {
   cat <<'EOF'
 Usage:
   sudo bash install_frappe_v16.sh \
-    --domain planettechnepal.com \
-    --site planettechnepal.com \
-    --email admin@planettechnepal.com \
+    --domain yourdomain.com \
+    --email admin@yourdomain.com \
     --frappe-user frappe \
     --bench frappe-bench \
     --timezone Asia/Kathmandu
@@ -33,6 +33,7 @@ Optional environment variables:
   SWAP_GB            Swap size in GB (default: 8)
 
 Notes:
+  - Script asks for final confirmation before making changes.
   - If DB_ROOT_PASSWORD / ADMIN_PASSWORD are not set, script prompts securely.
   - SSL is skipped if --email is not provided.
 EOF
@@ -83,6 +84,7 @@ parse_args() {
       --frappe-user) FRAPPE_USER="${2:-}"; shift 2 ;;
       --bench) BENCH_NAME="${2:-}"; shift 2 ;;
       --timezone) TZ_NAME="${2:-}"; shift 2 ;;
+      --yes) ASSUME_YES=1; shift ;;
       -h|--help) usage; exit 0 ;;
       *) die "Unknown argument: $1" ;;
     esac
@@ -94,11 +96,7 @@ parse_args "$@"
 [[ "$(id -u)" -eq 0 ]] || die "Run as root (sudo)."
 
 if [[ -z "$SITE_NAME" ]]; then
-  if [[ -n "$DOMAIN" ]]; then
-    SITE_NAME="$DOMAIN"
-  else
-    read -rp "Site name (e.g. planettechnepal.com): " SITE_NAME
-  fi
+  read -rp "Site name (e.g. site.example.com): " SITE_NAME
 fi
 
 if [[ -z "$DB_ROOT_PASSWORD" ]]; then
@@ -113,6 +111,28 @@ fi
 
 if [[ -n "$DOMAIN" && -z "$LE_EMAIL" ]]; then
   read -rp "Let's Encrypt email (blank to skip SSL): " LE_EMAIL
+fi
+
+echo
+echo "Planned configuration:"
+echo "  Site Name       : $SITE_NAME"
+echo "  Domain          : ${DOMAIN:-<none>}"
+echo "  Frappe User     : $FRAPPE_USER"
+echo "  Bench Name      : $BENCH_NAME"
+echo "  Timezone        : $TZ_NAME"
+echo "  Swap (GB)       : $SWAP_GB"
+if [[ -n "$LE_EMAIL" ]]; then
+  echo "  SSL             : enabled (certbot, $LE_EMAIL)"
+else
+  echo "  SSL             : skipped"
+fi
+
+if [[ "$ASSUME_YES" -ne 1 ]]; then
+  read -rp "Proceed with installation? [y/N]: " proceed
+  case "$proceed" in
+    y|Y|yes|YES) ;;
+    *) echo "Aborted by user."; exit 0 ;;
+  esac
 fi
 
 export DEBIAN_FRONTEND=noninteractive
