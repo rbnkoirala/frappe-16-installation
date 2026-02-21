@@ -98,3 +98,5 @@ Rotate credentials after install:
 ## License
 
 MIT (or your preferred license).
+
+> **Note:** This installer is still under testing. Do not rely on it fully before validating it in your own environment.
